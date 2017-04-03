@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, uniuqe: true, required: true },
+  username: { type: String, uniuqe: true, required: true, dropDups: true },
   password: { type: String, required: true },
   created_at: {type: Date, default: Date.now},
   update_at: {type: Date, default: Date.now}
