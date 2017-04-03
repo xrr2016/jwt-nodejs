@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
-const router = require('express').Router()
+const passport = require('passport')
 const jwt = require('jwt-simple')
+const router = require('express').Router()
 
 const User = require('../models/user')
 const config = require('../config/config')
@@ -39,31 +40,46 @@ router.post('/auth', function (req, res) {
       user.comparePassword(req.body.password, function (err, isMatch) {
         if (isMatch && !err) {
           // 生成token
-          var token = jwt.encode(user, config.secret)
-          res.json({success: true, token: 'JWT ' + token})
+          const token = jwt.encode(user, config.secret)
+          res.json({success: true, token: token})
         } else {
           res.send({success: false, msg: '验证失败, 用户密码错误!'})
         }
       })
     }
   })
-      // .then(function (user) {
-      //   if (!user) {
-      //     return res.status(403).snd({success: false, msg: '未找到用户.'})
-      //   } else {
-      //     user.comparePassword(req.body.password, function (err, isMatch) {
-      //       if (isMatch && !err) {
-      //         let token = jwt.encode(user, config.secret)
-      //         res.json({successs: true, token: `JWT${token}`})
-      //       } else {
-      //         return res.status(403).snd({success: false, msg: '验证失败!'})
-      //       }
-      //     })
-      //   }
-      // })
-      // .catch(function (err) {
-      //   throw err
-      // })
 })
+router.get('/login', passport.authenticate('jwt', {session: false}), function (req, res) {
+  const token = req.headers.authorization
+  console.log(req.headers)
+  if (token) {
+    let decoded = jwt.decode(token, config.secret)
+    User.findOne({username: decoded.username}, function (err, user) {
+      if (err) {
+        console.log(err)
+      }
+      if (!user) {
+        return res.send({success: false, msg: '用户未找到!'})
+      } else {
+        return res.josn({success: true, msg: `欢迎光临! ${user.username}.`})
+      }
+    })
+  } else {
+    res.send({success: false, msg: '用户未注册!'})
+  }
+})
+
+// function getToken (headers) {
+//   if (headers && headers.authorization) {
+//     let parted = headers.authorization.split(' ')
+//     if (parted.lenght === 2) {
+//       return parted[1]
+//     } else {
+//       return null
+//     }
+//   } else {
+//     return null
+//   }
+// }
 
 module.exports = router
